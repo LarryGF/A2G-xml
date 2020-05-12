@@ -8,18 +8,18 @@ import csv
 def xml_to_json(path: str):
     with open(path, 'r') as file:
         my_dict = xmltodict.parse(file.read())
-    if my_dict.setdefault('OMeS', False):
-        if my_dict['OMeS'].setdefault('PMSetup', False):
-            print(len( my_dict['OMeS']['PMSetup']))
-            data = my_dict['OMeS']['PMSetup']
-            parsed_dict = {}
-            for measurement in data:
-                parsed_dict[measurement['@startTime']] = measurement['PMMOResult']
-            return parsed_dict
+        if my_dict.setdefault('OMeS', False):
+            if my_dict['OMeS'].setdefault('PMSetup', False):
+                print(len( my_dict['OMeS']['PMSetup']))
+                data = my_dict['OMeS']['PMSetup']
+                parsed_dict = {}
+                for measurement in data:
+                    parsed_dict[measurement['@startTime']] = measurement['PMMOResult']
+                return parsed_dict
+            else:
+                raise Exception('Script not prepaired for this structure')
         else:
             raise Exception('Script not prepaired for this structure')
-    else:
-        raise Exception('Script not prepaired for this structure')
 def csv_to_json(csv_path: str):
     csvList = []
     csv_dict = {}
@@ -62,11 +62,15 @@ if __name__ == "__main__":
     csv_json = csv_to_json(csv_path)
     path = click.prompt('Path or name of the xml file ',default='1.xml')
     xml_json = xml_to_json(path)
-    with open('xml.json','w') as file:
-        json.dump(xml_json,file, indent=2)
-    with open('csv.json','w') as file:
-        json.dump(csv_json,file, indent=2)
+    # with open('xml.json','w') as file:
+    #     json.dump(xml_json,file, indent=2)
+    # with open('csv.json','w') as file:
+    #     json.dump(csv_json,file, indent=2)
     
     processed_xml_json = process_xml_json(xml_json,csv_json)
     with open('processed_xml.json','w') as file:
         json.dump(processed_xml_json,file, indent=2)
+        
+    for date in processed_xml_json:
+        dict_to_adapt = processed_xml_json[date]
+        
