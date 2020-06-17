@@ -3,14 +3,13 @@ import os
 import json
 import click
 import csv 
-
+import glob
 
 def xml_to_json(path: str):
     with open(path, 'r') as file:
         my_dict = xmltodict.parse(file.read())
         if my_dict.setdefault('OMeS', False):
             if my_dict['OMeS'].setdefault('PMSetup', False):
-                print(len( my_dict['OMeS']['PMSetup']))
                 data = my_dict['OMeS']['PMSetup']
                 parsed_dict = {}
                 for measurement in data:
@@ -120,24 +119,32 @@ def adapt_json_to_csv(list_to_adapt:dict):
 if __name__ == "__main__":
     csv_path = click.prompt('Path or name of the csv file ',default='2.csv')
     csv_json = csv_to_json(csv_path)
-    path = click.prompt('Path or name of the xml file ',default='1.xml')
-    xml_json = xml_to_json(path)
-    # with open('xml.json','w') as file:
-    #     json.dump(xml_json,file, indent=2)
-    # with open('csv.json','w') as file:
-    #     json.dump(csv_json,file, indent=2)
-    
-    processed_xml_json = process_xml_json(xml_json,csv_json)
-    with open('processed_xml.json','w') as file:
-        json.dump(processed_xml_json,file, indent=2)
+    path = click.prompt('Path or name of the folder containing the xml files',default='xml')
+    file_list = []
+    os.chdir(path)
+    for file in glob.glob("*.xml"):
+        file_list.append(os.path.join(path,file))
+    os.chdir('../')
+    for new_path in file_list:
         
-    count10 = 0
-    for date in processed_xml_json:
-        list_to_adapt = processed_xml_json[date]
-        list_of_lists = adapt_json_to_csv(list_to_adapt)
-        new_date = date.replace('-','_').replace(':','-')
         
-        with open(new_date+'.csv','w', newline='') as file:
-            writer =  csv.writer(file)
-            writer.writerows(list_of_lists)
-        count10+=1
+        xml_json = xml_to_json(new_path)
+        # with open('xml.json','w') as file:
+        #     json.dump(xml_json,file, indent=2)
+        # with open('csv.json','w') as file:
+        #     json.dump(csv_json,file, indent=2)
+        
+        processed_xml_json = process_xml_json(xml_json,csv_json)
+        with open('processed_xml.json','w') as file:
+            json.dump(processed_xml_json,file, indent=2)
+            
+        count10 = 0
+        for date in processed_xml_json:
+            list_to_adapt = processed_xml_json[date]
+            list_of_lists = adapt_json_to_csv(list_to_adapt)
+            new_date = date.replace('-','_').replace(':','-')
+            
+            with open(new_date+'.csv','w', newline='') as file:
+                writer =  csv.writer(file)
+                writer.writerows(list_of_lists)
+            count10+=1
